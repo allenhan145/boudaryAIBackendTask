@@ -1,8 +1,0 @@
-npm install \
-  @hello-pangea/dnd \
-  moment-timezone \
-  react-router-dom \
-  react-hot-toast \
-  react-tooltip \
-  react-icons \
-  eslint-config-react-app --save-dev\
