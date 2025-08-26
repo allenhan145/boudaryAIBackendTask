@@ -22,7 +22,7 @@ Your job is to:
     * A POST endpoint (e.g. `/api/surveys/generate`) that accepts the user’s description.
   * **Logic & Integration:**
 
-    * Use the OpenAI API (key provided), or another LLM of your choice to generate a structured survey.
+    * Use the OpenAI API, or another LLM of your choice to generate a structured survey.
     * It is recommended that the output be JSON-structured (e.g. `{ "title": "...", "questions": [ { "type": "...", "text": "..." }, … ] }`).
   * **Storage:** save generated surveys for repeated prompts.
 
