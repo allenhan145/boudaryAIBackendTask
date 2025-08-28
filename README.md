@@ -37,6 +37,10 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
+    * Use the OpenAI API, or another LLM of your choice to generate a structured survey.
+    * It is recommended that the output be JSON-structured (e.g. `{ "title": "...", "questions": [ { "type": "...", "text": "..." }, … ] }`).
+  * **Storage:** save generated surveys for repeated prompts.
+
 
 ### Tests & Lint
 
