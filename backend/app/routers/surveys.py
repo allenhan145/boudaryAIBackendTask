@@ -9,6 +9,7 @@ from ..llm.providers import LLMProvider, get_llm_provider
 from ..models import Survey as SurveyModel
 from ..schemas import Survey, SurveyGenerateRequest
 from ..services.survey_service import generate_or_get_survey
+from ..utils.rate_limit import rate_limit_dep
 
 settings = get_settings()
 _RATE_LIMIT = settings.rate_limit_per_min
@@ -44,6 +45,7 @@ async def generate_survey(
     request: Request,
     session: AsyncSession = Depends(get_session),
     provider: LLMProvider = Depends(get_provider),
+    _: None = Depends(rate_limit_dep),
 ) -> dict:
     verify_token(request)
     check_rate_limit(request)

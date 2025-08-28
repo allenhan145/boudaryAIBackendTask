@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 
 from ..llm.providers import LLMProvider
 from ..models import Survey
@@ -32,6 +33,11 @@ async def generate_or_get_survey(
         survey_json=survey_json,
     )
     session.add(survey)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        res = await session.execute(stmt)
+        return res.scalar_one(), True
     await session.refresh(survey)
     return survey, False
