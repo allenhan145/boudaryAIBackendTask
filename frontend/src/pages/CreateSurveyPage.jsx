@@ -2,6 +2,7 @@ import DashboardLayout from "../component/DashboardLayout";
 import CreateSurvey from "../component/CreateSurvey";
 import CreateSurveySidebar from "../component/CreateSurveySidebar";
 import Header from "../component/Header";
+import SurveyGenerator from "../component/SurveyGenerator";
 
 const CreateSurveyPage = ({ surveySeriesId = "defaultId" }) => {
   return (
@@ -16,6 +17,7 @@ const CreateSurveyPage = ({ surveySeriesId = "defaultId" }) => {
         </div>
         <div className="flex grow w-full overflow-hidden h-full">
           <div className="grow p-3 sm:p-2 w-full overflow-auto h-[calc(100vh-164px)] sm:h-[calc(100vh-192px)] md:h-[calc(100vh-192px)] lg:h-[calc(100vh-148px)] xl:h-full scrollbar-style">
+            <SurveyGenerator />
             <div className="block lg:hidden">
               <CreateSurveySidebar surveySeriesId={surveySeriesId} />
             </div>
