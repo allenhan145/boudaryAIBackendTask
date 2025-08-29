@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 
 const CreateSurveyContext = createContext();
 
@@ -30,15 +30,12 @@ export const CreateSurveyProviderMock = ({ children }) => {
 
   const handleAddOption = useCallback((questionIndex) => {
     if (isAddingOption) {
-      console.log('Already adding option, skipping...');
       return;
     }
-    
+
     setIsAddingOption(true);
-    console.log('handleAddOption called for question:', questionIndex);
-    
+
     setQuestions((prev) => {
-      console.log('Previous questions:', prev);
       const newQuestions = [...prev];
       if (!newQuestions[questionIndex].options) {
         newQuestions[questionIndex].options = [];
@@ -47,15 +44,13 @@ export const CreateSurveyProviderMock = ({ children }) => {
         id: Date.now() + Math.random(),
         text: "",
       };
-      console.log('Adding new option:', newOption);
       newQuestions[questionIndex].options.push(newOption);
-      console.log('New questions after adding option:', newQuestions);
-      
+
       // Reset the flag after the state update
       setTimeout(() => {
         setIsAddingOption(false);
       }, 0);
-      
+
       return newQuestions;
     });
   }, [isAddingOption]);
@@ -149,13 +144,7 @@ export const CreateSurveyProviderMock = ({ children }) => {
     setQuestions(items);
   };
 
-  const handleCreateSurvey = () => {
-    console.log("Mock create survey:", {
-      title: surveyTitle,
-      description: surveyDescription,
-      questions,
-    });
-  };
+  const handleCreateSurvey = () => {};
 
   return (
     <CreateSurveyContext.Provider

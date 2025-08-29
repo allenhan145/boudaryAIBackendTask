@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { SixDotIcon } from "./Icons";
 import { sidebarcontent } from "./helper";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
@@ -6,7 +6,6 @@ import { useCreateSurveyProvider } from "./CreateSurveyProvider";
 
 const CreateSurveyContent = () => {
   const { questions, onDragEnd } = useCreateSurveyProvider();
-  const [surveyContent, setSurveyContent] = useState(sidebarcontent);
 
   return (
     <div className="rounded-[20px] border-2 border-light-gray bg-white mt-3 flex flex-col  h-full sm:h-[calc(100vh-338px)] ">

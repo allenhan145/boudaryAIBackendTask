@@ -113,6 +113,12 @@ def _normalize_survey_dict(data: dict, description: str) -> dict:
         uuid.uuid5(uuid.NAMESPACE_DNS, normalize_description(description))
     )
 
+    # Base UUID for deterministic question IDs
+    try:
+        base_uuid = uuid.UUID(out["id"])  # use the survey id as the namespace
+    except Exception:
+        base_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, normalize_description(description))
+
     # Questions
     questions = data.get("questions") or []
     norm_questions = []
@@ -121,9 +127,9 @@ def _normalize_survey_dict(data: dict, description: str) -> dict:
             continue
         qq: dict = {}
 
-        # id
+        # id (deterministic when missing): derive from survey base UUID + index
         qq["id"] = _safe_uuid_str(q.get("id")) or str(
-            uuid.uuid5(uuid.uuid4(), f"q{idx}")
+            uuid.uuid5(base_uuid, f"q{idx}")
         )
 
         # type normalization
@@ -210,11 +216,19 @@ PROVIDER_MAP = {
 
 def get_llm_provider(settings: Settings | None = None) -> LLMProvider:
     settings = settings or get_settings()
-    provider_name = settings.llm_provider.lower()
+    provider_name = (settings.llm_provider or "mock").lower()
     provider_cls = PROVIDER_MAP.get(provider_name, MockProvider)
 
-    if provider_cls is OpenAIProvider and settings.openai_api_key:
-        return OpenAIProvider(settings.openai_api_key)
+    # Handle OpenAI explicitly: require API key; otherwise fall back to mock
+    if provider_cls is OpenAIProvider:
+        if settings.openai_api_key:
+            return OpenAIProvider(settings.openai_api_key)
+        # Missing API key: use mock to avoid runtime TypeError
+        return MockProvider()
+
+    # For not-yet-implemented providers use mock
     if provider_cls is NotImplementedProvider:
         return MockProvider()
+
+    # Default: return the concrete provider (mock)
     return provider_cls()

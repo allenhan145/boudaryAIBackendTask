@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
 backend/.env
+backend/.venv/
+backend/.pytest_cache/
+backend/.ruff_cache/

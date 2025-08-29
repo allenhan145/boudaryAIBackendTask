@@ -3,6 +3,7 @@ import time
 from typing import Dict, List
 
 from fastapi import HTTPException, Request
+from ..config import get_settings
 
 
 class RateLimiter:
@@ -21,7 +22,8 @@ class RateLimiter:
             window.append(now)
             self.hits[key] = window
 
-rate_limiter = RateLimiter(rate=20, per_seconds=60)
+settings = get_settings()
+rate_limiter = RateLimiter(rate=settings.rate_limit_per_min, per_seconds=60)
 
 async def rate_limit_dep(request: Request):
     ident = request.client.host if request.client else "global"

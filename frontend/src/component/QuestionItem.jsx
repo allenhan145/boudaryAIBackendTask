@@ -275,7 +275,6 @@ const QuestionItem = ({ question, index }) => {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('Add Option button clicked for question:', index);
                         handleAddOption(index);
                       }}
                       className={`mt-5 disabled:opacity-70 bg-[#6851a7] hover:bg-[#5b4691] text-white py-2 px-4 rounded-full font-medium transition-all duration-200`}

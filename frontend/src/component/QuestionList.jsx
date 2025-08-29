@@ -7,8 +7,6 @@ import { motion } from "framer-motion";
 const QuestionList = ({ questions }) => {
   const { onDragEnd } = useCreateSurveyProvider();
 
-  console.log('QuestionList rendering with questions:', questions.length, questions);
-
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <Droppable droppableId="questions" type="TASK" direction="vertical">
@@ -20,7 +18,6 @@ const QuestionList = ({ questions }) => {
           >
             {questions.map((question, index) => {
               if (!question) return null;
-              console.log('Rendering question at index:', index, 'with id:', question.id);
               return (
                 <motion.div 
                   key={question.id}
