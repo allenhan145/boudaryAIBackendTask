@@ -93,9 +93,9 @@ class OpenAIProvider:
 
         raw = json.loads(content)
         normalized = _normalize_survey_dict(raw, description)
-        # Validate and prune extras
+        # Validate and prune extras; return JSON-serializable dict
         model = SurveySchema.model_validate(normalized)
-        return model.model_dump()
+        return model.model_dump(mode="json")
 
 
 def _normalize_survey_dict(data: dict, description: str) -> dict:

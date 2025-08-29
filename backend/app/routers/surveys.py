@@ -43,15 +43,15 @@ async def _ensure_valid_survey_json(survey: SurveyModel, session: AsyncSession) 
     data = survey.survey_json
     try:
         model = Survey.model_validate(data)
-        # Return the validated dump directly to avoid lazy-loading the attribute again
-        return model.model_dump()
+        # Return JSON-serializable dump to store in DB JSON field
+        return model.model_dump(mode="json")
     except Exception:
         # Normalize legacy or non-conforming payloads then validate and persist
         from ..llm.providers import _normalize_survey_dict  # local import to avoid cycles
 
         normalized = _normalize_survey_dict(data if isinstance(data, dict) else {}, survey.description)
         model = Survey.model_validate(normalized)
-        fixed = model.model_dump()
+        fixed = model.model_dump(mode="json")
         survey.survey_json = fixed
         try:
             await session.commit()
