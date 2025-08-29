@@ -40,9 +40,16 @@ def check_rate_limit(request: Request) -> None:
 
 async def _ensure_valid_survey_json(survey: SurveyModel, session: AsyncSession) -> dict:
     """Validate survey.survey_json against schema; normalize and persist if needed."""
+    # Proactively load attributes to avoid async lazy-load in property access
+    try:
+        await session.refresh(survey, attribute_names=["survey_json", "description"])
+    except Exception:
+        pass
+
     data = survey.survey_json
     try:
         model = Survey.model_validate(data)
+        # Return the validated dump directly to avoid lazy-loading the attribute again
         return model.model_dump()
     except Exception:
         # Normalize legacy or non-conforming payloads then validate and persist
@@ -50,13 +57,15 @@ async def _ensure_valid_survey_json(survey: SurveyModel, session: AsyncSession) 
 
         normalized = _normalize_survey_dict(data if isinstance(data, dict) else {}, survey.description)
         model = Survey.model_validate(normalized)
-        survey.survey_json = model.model_dump()
+        fixed = model.model_dump()
+        survey.survey_json = fixed
         try:
             await session.commit()
-            await session.refresh(survey)
+            # Ensure the attribute is loaded if accessed later, but we return fixed directly
+            await session.refresh(survey, attribute_names=["survey_json"])
         except Exception:
             await session.rollback()
-        return survey.survey_json
+        return fixed
 
 
 @router.post("/generate", response_model=Survey, status_code=status.HTTP_201_CREATED)
