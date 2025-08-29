@@ -1,4 +1,10 @@
 import React, { useState } from 'react';
+// Import the creation context to auto-fill the form
+// JS module provides runtime values; TS will infer `any` types.
+// This enables us to set title, description, and questions after generation.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { useCreateSurveyProvider } from './CreateSurveyProvider';
 
 interface Scale {
   min: number;
@@ -28,6 +34,65 @@ const SurveyGenerator: React.FC = () => {
   const [survey, setSurvey] = useState<Survey | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const {
+    setSurveyTitle,
+    setSurveyDescription,
+    setQuestions,
+  } = useCreateSurveyProvider();
+
+  const mapBackendTypeToUI = (t: string): string => {
+    switch (t) {
+      case 'multiple_choice':
+        return 'singleChoice';
+      case 'checkboxes':
+        return 'multipleChoice';
+      case 'open_text':
+        return 'openQuestion';
+      case 'rating':
+      case 'likert':
+        return 'scale';
+      case 'yes_no':
+        return 'singleChoice';
+      case 'matrix':
+        return 'multipleChoice';
+      default:
+        return 'shortAnswer';
+    }
+  };
+
+  const toProviderQuestions = (qs: Question[]) => {
+    const makeId = () => Date.now() + Math.random();
+
+    return qs.map((q) => {
+      const uiType = mapBackendTypeToUI(q.type);
+      let options: Array<{ id: number; text: string }> = [];
+
+      if (uiType === 'singleChoice' || uiType === 'multipleChoice') {
+        if (q.type === 'yes_no') {
+          options = [
+            { id: makeId(), text: 'Yes' },
+            { id: makeId(), text: 'No' },
+          ];
+        } else if (q.options && q.options.length) {
+          options = q.options.map((opt) => ({ id: makeId(), text: opt }));
+        } else {
+          // Ensure minimum two options exist for choice questions
+          options = [
+            { id: makeId(), text: '' },
+            { id: makeId(), text: '' },
+          ];
+        }
+      }
+
+      return {
+        id: (q.id as unknown) as number | string,
+        type: uiType,
+        title: q.text,
+        saved: false,
+        options,
+      } as unknown as any; // provider is JS, accept loose typing here
+    });
+  };
 
   const generate = async () => {
     setLoading(true);
@@ -43,6 +108,16 @@ const SurveyGenerator: React.FC = () => {
       }
       const data = (await resp.json()) as Survey;
       setSurvey(data);
+
+      // Push into the creation form
+      try {
+        setSurveyTitle(data.title);
+        setSurveyDescription(data.description);
+        setQuestions(toProviderQuestions(data.questions));
+      } catch (e) {
+        // Non-fatal: keep showing the generated preview
+        console.error('Failed to apply generated survey to form', e);
+      }
     } catch (e: any) {
       setError(e.message);
     } finally {
