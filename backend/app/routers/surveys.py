@@ -38,6 +38,27 @@ def check_rate_limit(request: Request) -> None:
         raise HTTPException(status_code=429, detail="Too many requests")
 
 
+async def _ensure_valid_survey_json(survey: SurveyModel, session: AsyncSession) -> dict:
+    """Validate survey.survey_json against schema; normalize and persist if needed."""
+    data = survey.survey_json
+    try:
+        model = Survey.model_validate(data)
+        return model.model_dump()
+    except Exception:
+        # Normalize legacy or non-conforming payloads then validate and persist
+        from ..llm.providers import _normalize_survey_dict  # local import to avoid cycles
+
+        normalized = _normalize_survey_dict(data if isinstance(data, dict) else {}, survey.description)
+        model = Survey.model_validate(normalized)
+        survey.survey_json = model.model_dump()
+        try:
+            await session.commit()
+            await session.refresh(survey)
+        except Exception:
+            await session.rollback()
+        return survey.survey_json
+
+
 @router.post("/generate", response_model=Survey, status_code=status.HTTP_201_CREATED)
 async def generate_survey(
     payload: SurveyGenerateRequest,
@@ -54,7 +75,8 @@ async def generate_survey(
     )
     response.headers["X-Cache-Hit"] = "1" if cache_hit else "0"
     response.status_code = status.HTTP_200_OK if cache_hit else status.HTTP_201_CREATED
-    return survey.survey_json
+    data = await _ensure_valid_survey_json(survey, session)
+    return data
 
 
 @router.get("/{survey_id}", response_model=Survey)
@@ -68,4 +90,5 @@ async def get_survey(
     survey = await session.get(SurveyModel, survey_id)
     if not survey:
         raise HTTPException(status_code=404, detail="Not found")
-    return survey.survey_json
+    data = await _ensure_valid_survey_json(survey, session)
+    return data
