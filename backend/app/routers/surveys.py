@@ -30,8 +30,6 @@ def verify_token(request: Request) -> None:
             raise HTTPException(status_code=401, detail="Unauthorized")
 
 
-
-
 async def _ensure_valid_survey_json(survey: SurveyModel, session: AsyncSession) -> dict:
     """Validate survey.survey_json against schema; normalize and persist if needed."""
     # Proactively load attributes to avoid async lazy-load in property access
@@ -47,15 +45,20 @@ async def _ensure_valid_survey_json(survey: SurveyModel, session: AsyncSession) 
         return model.model_dump(mode="json")
     except Exception:
         # Normalize legacy or non-conforming payloads then validate and persist
-        from ..llm.providers import _normalize_survey_dict  # local import to avoid cycles
+        from ..llm.providers import (  # local import to avoid cycles
+            _normalize_survey_dict,
+        )
 
-        normalized = _normalize_survey_dict(data if isinstance(data, dict) else {}, survey.description)
+        normalized = _normalize_survey_dict(
+            data if isinstance(data, dict) else {}, survey.description
+        )
         model = Survey.model_validate(normalized)
         fixed = model.model_dump(mode="json")
         survey.survey_json = fixed
         try:
             await session.commit()
-            # Ensure the attribute is loaded if accessed later, but we return fixed directly
+            # Ensure the attribute is loaded if accessed later,
+            # but we return fixed directly
             await session.refresh(survey, attribute_names=["survey_json"])
         except Exception:
             await session.rollback()

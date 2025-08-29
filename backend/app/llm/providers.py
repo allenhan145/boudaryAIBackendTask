@@ -9,8 +9,8 @@ import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ..config import Settings, get_settings
-from ..utils.hashing import normalize_description
 from ..schemas import Survey as SurveySchema
+from ..utils.hashing import normalize_description
 from .prompts import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
 
 
@@ -128,9 +128,7 @@ def _normalize_survey_dict(data: dict, description: str) -> dict:
         qq: dict = {}
 
         # id (deterministic when missing): derive from survey base UUID + index
-        qq["id"] = _safe_uuid_str(q.get("id")) or str(
-            uuid.uuid5(base_uuid, f"q{idx}")
-        )
+        qq["id"] = _safe_uuid_str(q.get("id")) or str(uuid.uuid5(base_uuid, f"q{idx}"))
 
         # type normalization
         qtype = (q.get("type") or "open_text").lower().replace("-", "_")
