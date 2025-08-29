@@ -24,7 +24,16 @@ class RateLimiter:
 
 settings = get_settings()
 rate_limiter = RateLimiter(rate=settings.rate_limit_per_min, per_seconds=60)
+_cached_rate: int | None = settings.rate_limit_per_min
 
 async def rate_limit_dep(request: Request):
+    # Sync limiter configuration with current settings and reset window if changed.
+    current_rate = get_settings().rate_limit_per_min
+    global _cached_rate
+    if _cached_rate != current_rate:
+        _cached_rate = current_rate
+        rate_limiter.rate = current_rate
+        rate_limiter.hits.clear()
+
     ident = request.client.host if request.client else "global"
     await rate_limiter.check(ident)
